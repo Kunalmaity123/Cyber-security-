@@ -1,0 +1,61 @@
+import pandas as pd
+
+# Function to create a Playfair cipher key matrix
+def create_playfair_matrix(key):
+    key = key.upper().replace("J", "I")  # Standard Playfair rule: J is replaced with I
+    key = "".join(dict.fromkeys(key + "ABCDEFGHIKLMNOPQRSTUVWXYZ"))  # Remove duplicates
+
+    # Create a 5x5 matrix using Pandas
+    matrix = pd.DataFrame(list(key), index=[i // 5 for i in range(25)], columns=[i % 5 for i in range(25)])
+    return matrix
+
+# Function to find row and column of a letter in the matrix
+def find_position(matrix, letter):
+    row, col = divmod(matrix.values.flatten().tolist().index(letter), 5)
+    return row, col
+
+# Function to prepare the plaintext (remove spaces, duplicate letters, add filler 'X')
+def prepare_text(plain_text):
+    plain_text = plain_text.upper().replace("J", "I").replace(" ", "")
+    prepared = ""
+    
+    i = 0
+    while i < len(plain_text):
+        prepared += plain_text[i]
+        if i + 1 < len(plain_text) and plain_text[i] == plain_text[i + 1]:
+            prepared += "X"
+        if i + 1 < len(plain_text):
+            prepared += plain_text[i + 1]
+        i += 2
+    
+    if len(prepared) % 2 != 0:
+        prepared += "X"
+    
+    return prepared
+
+# Function to encrypt using Playfair cipher
+def playfair_encrypt(plain_text, key):
+    matrix = create_playfair_matrix(key)
+    prepared_text = prepare_text(plain_text)
+    encrypted_text = ""
+    
+    for i in range(0, len(prepared_text), 2):
+        a, b = prepared_text[i], prepared_text[i + 1]
+        row_a, col_a = find_position(matrix, a)
+        row_b, col_b = find_position(matrix, b)
+        
+        if row_a == row_b:  # Same row, shift right
+            encrypted_text += matrix.iloc[row_a, (col_a + 1) % 5] + matrix.iloc[row_b, (col_b + 1) % 5]
+        elif col_a == col_b:  # Same column, shift down
+            encrypted_text += matrix.iloc[(row_a + 1) % 5, col_a] + matrix.iloc[(row_b + 1) % 5, col_b]
+        else:  # Rectangle swap
+            encrypted_text += matrix.iloc[row_a, col_b] + matrix.iloc[row_b, col_a]
+    
+    return encrypted_text
+
+# Example usage
+key = "MONARCHY"
+plaintext = "HELLO WORLD"
+
+cipher_text = playfair_encrypt(plaintext, key)
+print("Encrypted Text:", cipher_text)
