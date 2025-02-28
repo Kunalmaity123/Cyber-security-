@@ -1,0 +1,47 @@
+import pandas as pd
+
+# Function to create a Caesar cipher mapping using Pandas
+def create_caesar_cipher_mapping(shift):
+    alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    shifted_alphabet = alphabet[shift:] + alphabet[:shift]  # Shifting the alphabet
+    
+    # Create a Pandas DataFrame for mapping
+    df = pd.DataFrame({'Original': alphabet, 'Cipher': shifted_alphabet})
+    return df
+
+# Function to encrypt text using Caesar cipher
+def caesar_encrypt(text, shift):
+    text = text.upper().replace(" ", "")  # Convert to uppercase and remove spaces
+    cipher_mapping = create_caesar_cipher_mapping(shift)
+    
+    encrypted_text = ""
+    for letter in text:
+        if letter in cipher_mapping["Original"].values:
+            encrypted_text += cipher_mapping[cipher_mapping["Original"] == letter]["Cipher"].values[0]
+        else:
+            encrypted_text += letter  # Keep non-alphabet characters unchanged
+    
+    return encrypted_text
+
+# Function to decrypt text using Caesar cipher
+def caesar_decrypt(text, shift):
+    cipher_mapping = create_caesar_cipher_mapping(shift)
+    
+    decrypted_text = ""
+    for letter in text:
+        if letter in cipher_mapping["Cipher"].values:
+            decrypted_text += cipher_mapping[cipher_mapping["Cipher"] == letter]["Original"].values[0]
+        else:
+            decrypted_text += letter  # Keep non-alphabet characters unchanged
+    
+    return decrypted_text
+
+# Example usage
+shift = 3
+plaintext = "HELLO WORLD"
+
+cipher_text = caesar_encrypt(plaintext, shift)
+decrypted_text = caesar_decrypt(cipher_text, shift)
+
+print("Encrypted Text:", cipher_text)
+print("Decrypted Text:", decrypted_text)
